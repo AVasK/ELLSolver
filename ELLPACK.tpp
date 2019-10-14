@@ -67,7 +67,7 @@ EllMatrix<T, n_nonzero>::EllMatrix(const EllMatrix& old)
 {
   _N = old._N;
   matrix = new T[n_nonzero * _N];
-  std::memcpy(matrix, old.matrix, old._N * n_nonzero * sizeof(T));
+  /*std::*/memcpy(matrix, old.matrix, old._N * n_nonzero * sizeof(T));
 }
 
 
@@ -88,7 +88,7 @@ void Ellpack<T, n_nonzero>::num_init() // initialize non-zeros as stated in the 
       {
         if ( coeff[i][j] != 0 )
         // init off-diagonal
-          sum += std::fabs( coeff[i][j] = T(std::cosf(i*j_real + 3.14)) ); // what is 3.14 needed for?
+          sum += std::fabs( coeff[i][j] = T(std::cos(i*j_real + 3.14)) ); // what is 3.14 needed for?
       }
       else
       {
@@ -166,15 +166,18 @@ std::ostream & operator<< (std::ostream & os, Ellpack<T, n_nonzero> m)
 
 // SpMV
 template <typename T, size_t n_nonzero>
-Vec<T> Ellpack<T, n_nonzero>::operator* (Vec<T> v_in)
+Vec<T> Ellpack<T, n_nonzero>::operator* (const Vec<T> & v_in)
 {
+  /*
   if ( _N != v_in.size() )
   {
     throw std::logic_error("sizes of matrix & vector don't match");
   }
+  */
 
   Vec<T> res(_N); // uninitialized result vec.
 
+  #pragma omp parallel for
   for ( int row = 0; row < _N; row++ )
   {
     T sum = 0; // running sum for rows

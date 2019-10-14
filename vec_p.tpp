@@ -1,3 +1,5 @@
+// parallel_vec
+
 template <typename T>
 T& Vec<T>::operator[] (size_t idx)
 {
@@ -24,15 +26,17 @@ std::ostream & operator<< (std::ostream& os, Vec<T> vector)
   return os;
 }
 
-// OPERATIONS TO BE MADE PARALLEL:
+// OPERATIONS ARE PARALLEL (BASELINE):
 
 // DOT (Vector product)
 template <typename T>
-T Vec<T>::operator* (Vec<T> other)
+T Vec<T>::operator* (const Vec<T> & other)
 {
   size_t N = values.size();
-  T sum = 0;
+  T sum;
 
+  #pragma omp parallel shared(sum)
+  #pragma omp for reduction(+:sum) schedule(dynamic, 100)
   for (size_t i = 0; i < N; i++)
   {
     sum += (*this)[i] * other[i];
@@ -48,6 +52,8 @@ Vec<T> Vec<T>::operator* (T value)
 {
   size_t N = values.size();
   auto temp = Vec<T>(N);
+
+  #pragma omp parallel for schedule(dynamic, 100)
   for (size_t i = 0; i < N; i++)
   {
     temp[i] = (*this)[i] * value;
@@ -57,10 +63,12 @@ Vec<T> Vec<T>::operator* (T value)
 
 // Vector addition
 template <typename T>
-Vec<T> Vec<T>::operator+ (Vec<T> other)
+Vec<T> Vec<T>::operator+ (const Vec<T> & other)
 {
   size_t N = values.size();
   auto temp = Vec<T>(N);
+
+  #pragma omp parallel for schedule(dynamic, 100)
   for (size_t i = 0; i < N; i++)
   {
     temp[i] = values[i] + other[i];
@@ -70,27 +78,15 @@ Vec<T> Vec<T>::operator+ (Vec<T> other)
 
 // Vector subtraction
 template <typename T>
-Vec<T> Vec<T>::operator- (Vec<T> other)
+Vec<T> Vec<T>::operator- (const Vec<T> & other)
 {
   size_t N = values.size();
   auto temp = Vec<T>(N);
+
+  #pragma omp parallel for schedule(dynamic, 100)
   for (size_t i = 0; i < N; i++)
   {
     temp[i] = values[i] - other[i];
-  }
-  return temp;
-}
-
-// AXpY: ax + y
-template <typename T>
-Vec<T> axpy(T a, Vec<T> x, Vec<T> & y)
-{
-  size_t N = y.size();
-  auto temp = Vec<T>(N);
-
-  for (size_t i = 0; i < N; i++)
-  {
-    temp[i] = a * x[i] + y[i];
   }
   return temp;
 }

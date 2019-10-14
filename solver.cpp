@@ -5,7 +5,8 @@
 
 #include <iostream>
 #include "ELLPACK.hpp"
-#include "vec.hpp"
+
+#include "parallel_setup.h"
 
 using namespace ELLPACK;
 
@@ -28,9 +29,16 @@ Vec<T> CG_solver(Ellpack<T,7> A, Vec<T> b, long MAX_ITER, T r_tol)
   Vec<T> x_k (N);
   Vec<T> x_prev (N);
 
+
+
+  #ifdef ENABLE_PARALLEL
+  //std::cout << "\n[ # Threads active : " << omp_get_num_threads() << " ]\n";
+  #endif
+
   do
   {
-    z_k = DiagInv<T>(A) * r_prev;
+    DiMV(DiagInv<T>(A), r_prev, z_k);
+    //z_k = DiagInv<T>(A) * r_prev;
     rho_prev = rho_k;
     rho_k = r_prev * z_k;
 
@@ -43,17 +51,18 @@ Vec<T> CG_solver(Ellpack<T,7> A, Vec<T> b, long MAX_ITER, T r_tol)
     else
     {
       auto beta_k = rho_k / rho_prev;
-      p_k = z_k + beta_k * p_prev;
+      axpy(beta_k, p_prev, z_k, p_k); //p_k = z_k + beta_k * p_prev;
     }
 
-    q_k = A * p_k;
+    SpMV(A, p_k, q_k);
+    //q_k = A * p_k;
     auto alpha_k = rho_k / (p_k * q_k);
 
     x_prev = x_k;
-    x_k = x_prev + alpha_k * p_k;
+    axpy(alpha_k, p_k, x_prev, x_k); // x_k = x_prev + alpha_k * p_k;
 
     r_prev = r_k;
-    r_k = r_prev - alpha_k * q_k;
+    axpy(-alpha_k, q_k, r_prev, r_k); // r_k = r_prev - alpha_k * q_k;
 
     if (( rho_k < r_tol ) or ( k <= MAX_ITER))
     {
@@ -64,7 +73,10 @@ Vec<T> CG_solver(Ellpack<T,7> A, Vec<T> b, long MAX_ITER, T r_tol)
     }
   }
   while ( convergence != true );
+
+
   return p_k;
 }
+
 
 #endif

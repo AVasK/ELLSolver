@@ -1,4 +1,4 @@
-#include "vec.hpp"
+#include "parallel_setup.h"
 
  int main()
  {

@@ -3,10 +3,14 @@
 #ifndef ELLPACK_H_
 #define ELLPACK_H_
 
+#include "parallel_setup.h"
+
 #include <iostream>
 #include <cmath>
+#include <cstring> // memset
+#include <tuple> // std::tie, std::tuple
 #include <vector>
-#include "vec.hpp" // for SpMV
+
 
 namespace ELLPACK {
 
@@ -129,7 +133,27 @@ namespace ELLPACK {
     inline const EllMatrix<T, n_nonzero> & getCoeffMat() { return coeff; }
 
     // SpMV for solver
-    Vec<T> operator* (Vec<T> v);
+    Vec<T> operator* (const Vec<T> & v);
+
+    friend
+    void SpMV (const Ellpack<T, n_nonzero> & ellp, const Vec<T> & v, Vec<T> & out)
+    {
+      #pragma omp parallel for
+      for ( int row = 0; row < ellp._N; row++ )
+      {
+        T sum = 0; // running sum for rows
+
+        for ( int col = 0; col < n_nonzero; col++ )
+        {
+          auto val = ellp.coeff[row][col];
+          auto idx = ellp.coord[row][col];
+
+          sum += v[idx] * val;
+        }
+        // row(th) element of vector is = to sum.
+        out[row] = sum;
+      }
+    }
   };
 
 
@@ -141,7 +165,7 @@ namespace ELLPACK {
     size_t _N;
   public:
 
-    size_t getN() { return _N; }
+    size_t getN() const { return _N; }
 
     DiagInv(size_t N) : _N ( N ), diag( std::vector<T> (N) ) {}
 
@@ -157,20 +181,32 @@ namespace ELLPACK {
       }
     }
 
-    friend DiagInv operator* (Vec<T> vec, DiagInv<T> diag)
+    friend DiagInv operator* (const Vec<T> & vec, const DiagInv<T> & diag)
     {
       return diag * vec;
     }
 
-    Vec<T> operator* (Vec<T> vec)
+    Vec<T> operator* (const Vec<T> & vec)
     {
       auto temp = Vec<T>(_N);
+      #pragma omp parallel for
       for (size_t i = 0; i < _N; i++)
       {
         temp[i] = vec[i] * diag[i];
       }
       return temp;
     }
+
+    friend
+    void DiMV (const DiagInv<T>& d, const Vec<T> & vec, Vec<T> & out)
+    {
+      #pragma omp parallel for
+      for (size_t i = 0; i < d.getN(); i++)
+      {
+        out[i] = vec[i] * d.diag[i];
+      }
+    }
+
 
     friend std::ostream & operator<< (std::ostream & os, DiagInv<T> self)
     {
@@ -194,6 +230,9 @@ namespace ELLPACK {
     }
 
   };
+
+
+
 
   // operator<< for Ellpack
   template <typename TX, size_t n>

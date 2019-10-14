@@ -27,7 +27,7 @@ public:
   Vec operator* (T value);
   Vec operator+ (Vec other);
   Vec operator- (Vec other);
-  void axpy(T a, Vec x, Vec & y);
+  Vec axpy(T a, Vec x, Vec & y);
 };
 
 template <typename T>
