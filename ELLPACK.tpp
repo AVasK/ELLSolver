@@ -88,7 +88,7 @@ void Ellpack<T, n_nonzero>::num_init() // initialize non-zeros as stated in the 
       {
         if ( coeff[i][j] != 0 )
         // init off-diagonal
-          sum += std::fabs( coeff[i][j] = T(std::cos(i*j_real + 3.14)) ); // what is 3.14 needed for?
+          sum += std::abs( coeff[i][j] = T(std::cos(i*j_real + 3.14)) ); // what is 3.14 needed for?
       }
       else
       {
@@ -177,7 +177,7 @@ Vec<T> Ellpack<T, n_nonzero>::operator* (const Vec<T> & v_in)
 
   Vec<T> res(_N); // uninitialized result vec.
 
-  #pragma omp parallel for
+  #pragma omp parallel for _schedule_
   for ( int row = 0; row < _N; row++ )
   {
     T sum = 0; // running sum for rows

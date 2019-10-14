@@ -9,7 +9,7 @@ int main()
   auto start = omp_get_wtime();
   #pragma omp parallel shared(sum)
   {
-    #pragma omp for reduction(+ : sum)
+    #pragma omp for _schedule_ reduction(+ : sum)
     for (long long i = 0; i < 50000000; i++)
     {
       sum += i;

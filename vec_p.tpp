@@ -36,7 +36,7 @@ T Vec<T>::operator* (const Vec<T> & other)
   T sum;
 
   #pragma omp parallel shared(sum)
-  #pragma omp for reduction(+:sum) schedule(dynamic, 100)
+  #pragma omp for _schedule_ reduction(+:sum)
   for (size_t i = 0; i < N; i++)
   {
     sum += (*this)[i] * other[i];
@@ -53,7 +53,7 @@ Vec<T> Vec<T>::operator* (T value)
   size_t N = values.size();
   auto temp = Vec<T>(N);
 
-  #pragma omp parallel for schedule(dynamic, 100)
+  #pragma omp parallel for _schedule_
   for (size_t i = 0; i < N; i++)
   {
     temp[i] = (*this)[i] * value;
@@ -68,10 +68,22 @@ Vec<T> Vec<T>::operator+ (const Vec<T> & other)
   size_t N = values.size();
   auto temp = Vec<T>(N);
 
-  #pragma omp parallel for schedule(dynamic, 100)
+  #pragma omp parallel for _schedule_
   for (size_t i = 0; i < N; i++)
   {
     temp[i] = values[i] + other[i];
+  }
+  return temp;
+}
+
+template <typename T>
+Vec<T> v_abs(const Vec<T> & v)
+{
+  Vec<T> temp;
+  # pragma omp parallel for _schedule_
+  for (size_t i = 0; i < v.size(); i++)
+  {
+    temp[i] = abs(v[i]);
   }
   return temp;
 }
@@ -83,10 +95,23 @@ Vec<T> Vec<T>::operator- (const Vec<T> & other)
   size_t N = values.size();
   auto temp = Vec<T>(N);
 
-  #pragma omp parallel for schedule(dynamic, 100)
+  #pragma omp parallel for _schedule_
   for (size_t i = 0; i < N; i++)
   {
     temp[i] = values[i] - other[i];
   }
   return temp;
+}
+
+template <typename T>
+T L2_norm(Vec<T> v)
+{
+  return sqrt(v * v);
+}
+
+template <typename T>
+T C_norm(Vec<T> v)
+{
+  auto v_ = v_abs(v);
+  return sqrt(v_ * v_);
 }

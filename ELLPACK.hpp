@@ -138,7 +138,7 @@ namespace ELLPACK {
     friend
     void SpMV (const Ellpack<T, n_nonzero> & ellp, const Vec<T> & v, Vec<T> & out)
     {
-      #pragma omp parallel for
+      #pragma omp parallel for _schedule_
       for ( int row = 0; row < ellp._N; row++ )
       {
         T sum = 0; // running sum for rows
@@ -189,7 +189,7 @@ namespace ELLPACK {
     Vec<T> operator* (const Vec<T> & vec)
     {
       auto temp = Vec<T>(_N);
-      #pragma omp parallel for
+      #pragma omp parallel for _schedule_
       for (size_t i = 0; i < _N; i++)
       {
         temp[i] = vec[i] * diag[i];
@@ -200,7 +200,7 @@ namespace ELLPACK {
     friend
     void DiMV (const DiagInv<T>& d, const Vec<T> & vec, Vec<T> & out)
     {
-      #pragma omp parallel for
+      #pragma omp parallel for _schedule_
       for (size_t i = 0; i < d.getN(); i++)
       {
         out[i] = vec[i] * d.diag[i];

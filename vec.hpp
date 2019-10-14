@@ -4,6 +4,7 @@
 #include <iostream>
 //#include <array>
 #include <vector>
+#include <cmath>
 
 template <typename T>
 class Vec
@@ -29,6 +30,8 @@ public:
   Vec operator- (Vec other);
   Vec axpy(T a, Vec x, Vec & y);
 };
+
+
 
 template <typename T>
 Vec<T> operator*(T a, Vec<T> vec) { return vec * a; }

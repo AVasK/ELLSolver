@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
+#include <cmath>
 
 template <typename T>
 class Vec
@@ -32,7 +33,7 @@ public:
 
   friend void axpy(T a, const Vec & x, const Vec & y, Vec & out)
   {
-    #pragma omp parallel for schedule(dynamic, 100)
+    #pragma omp parallel for _schedule_
     for (size_t i = 0; i < x._N; i++)
     {
       out[i] = a*x[i] + y[i];
@@ -48,7 +49,7 @@ public:
 
   friend void scalar(T alpha, const Vec & v, Vec & out)
   {
-    #pragma omp parallel for
+    #pragma omp parallel for _schedule_
     for (size_t i = 0; i < v._N; i++)
     {
       out[i] = v[i] * alpha;
@@ -58,13 +59,36 @@ public:
 
   friend void axpby(T a, const Vec & x, T b, const Vec & y, Vec & out)
   {
-    #pragma omp parallel for
+    #pragma omp parallel for _schedule_
     for (size_t i = 0; i < x._N; i++)
     {
       out[i] = a*x[i] + b*y[i];
     }
   }
 };
+
+template <typename T>
+Vec<T> GenSin(size_t N)
+{
+  Vec<T> s(N);
+  for (size_t i = 0; i < N; i++)
+  {
+    s[i] = sin(i);
+  }
+  return s;
+}
+
+template <typename T>
+Vec<T> GenCos(size_t N)
+{
+  Vec<T> c(N);
+  for (size_t i = 0; i < N; i++)
+  {
+    c[i] = cos(i);
+  }
+  return c;
+}
+
 
 template <typename T>
 Vec<T> operator*(T a, Vec<T> vec) { return vec * a; }
